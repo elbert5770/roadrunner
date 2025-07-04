@@ -718,6 +718,19 @@ namespace rr {
         return getModel()->getTime();
     }
 
+    std::string RoadRunner::getLLVMIR() {
+        check_model();
+        
+        // Try to get LLVM IR from the model if it's an LLVM model
+        LLVMExecutableModel* llvmModel = dynamic_cast<LLVMExecutableModel*>(getModel());
+        if (llvmModel) {
+            return llvmModel->getLLVMIR();
+        }
+        
+        // If not an LLVM model, return empty string
+        return "";
+    }
+
     std::string RoadRunner::getExtendedVersionInfo() {
         std::stringstream info;
         info << getVersionStr(VERSIONSTR_BASIC | VERSIONSTR_COMPILER | VERSIONSTR_DATE | VERSIONSTR_LIBSBML)

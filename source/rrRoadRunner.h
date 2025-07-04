@@ -134,6 +134,12 @@ namespace rr {
         double getCurrentTime();
 
         /**
+         * @brief Get the LLVM IR as a human-readable string
+         * @return The LLVM IR code as a string, or empty string if no LLVM model is loaded
+         */
+        std::string getLLVMIR();
+
+        /**
          * The Compiler that the ModelGenerator is using to compile / interpret sbml code.
          */
         class Compiler *getCompiler();

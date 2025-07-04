@@ -2858,6 +2858,14 @@ void LLVMExecutableModel::saveState(std::ostream& out)
     rr::saveBinary(out, mIntegrationStartTime);
 }
 
+std::string LLVMExecutableModel::getLLVMIR() const
+{
+    if (resources && resources->jit) {
+        return resources->jit->emitToString();
+    }
+    return "";
+}
+
 
 /******************************* End Random Section ***************************/
 #endif  /**********************************************************************/

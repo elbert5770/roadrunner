@@ -596,6 +596,12 @@ public:
      * these are listed in
      */
     virtual void setFlags(uint32_t val) { flags = val; }
+    
+    /**
+     * @brief Get the LLVM IR as a human-readable string
+     * @return The LLVM IR code as a string, or empty string if no JIT is available
+     */
+    virtual std::string getLLVMIR() const;
 	
 	void saveState(std::ostream & out);
 
