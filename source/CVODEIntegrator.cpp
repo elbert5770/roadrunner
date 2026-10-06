@@ -690,6 +690,13 @@ namespace rr {
         // for some sbml tests.
         CVodeSetMaxNumSteps(mCVODE_Memory, mDefaultMaxNumSteps);
 
+        // Since SUNDIALS 7, CVODE warnings (e.g. "t + h = t") are written to the
+        // SUNContext's SUNLogger, which prints to stdout by default, rather than being
+        // passed to the error handler above, so they bypass the RoadRunner Logger.
+        // Disable them at the source, as was effectively the case before SUNDIALS 7 (#1316).
+        CVodeSetMaxHnilWarns(mCVODE_Memory, -1);
+        CVodeSetNoInactiveRootWarn(mCVODE_Memory);
+
         double t0 = 0.0;
 
         if ((err = CVodeSetUserData(mCVODE_Memory, (void *) this)) != CV_SUCCESS) {
