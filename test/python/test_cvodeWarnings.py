@@ -43,7 +43,9 @@ class CVODEWarningTests(unittest.TestCase):
                            capture_output=True, text=True)
         self.assertEqual(0, p.returncode, p.stderr)
         lines = (p.stdout + p.stderr).splitlines()
-        warnings = [l for l in lines if "[WARNING]" in l]
+        # "[WARNING]" is SUNDIALS' own format (written straight to stdout); "SUNDIALS Warning" is what
+        # RoadRunner's Logger prints when the warnings are routed through it (SUNDIALS >= 7.8).
+        warnings = [l for l in lines if "[WARNING]" in l or (level != "LOG_WARNING" and "SUNDIALS Warning" in l)]
         result = [l for l in lines if l.startswith("RESULT")]
         self.assertEqual(1, len(result), p.stdout + p.stderr)
         return warnings, [float(v) for v in result[0].split()[1:]]

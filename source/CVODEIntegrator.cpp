@@ -4,6 +4,7 @@
 #include "rrExecutableModel.h"
 #include "rrException.h"
 #include "rrLogger.h"
+#include "SundialsLogRouting.h"
 #include "rrStringUtils.h"
 #include "rrException.h"
 #include "rrConfig.h"
@@ -645,6 +646,7 @@ namespace rr {
           SUNContext_Free(&mSunContext);
         }
         SUNContext_Create(SUN_COMM_NULL, &mSunContext);
+        const bool sundialsLogRouted = routeSundialsLogToRRLogger(mSunContext);
 
         // cvode return code
         int err;
@@ -690,12 +692,14 @@ namespace rr {
         // for some sbml tests.
         CVodeSetMaxNumSteps(mCVODE_Memory, mDefaultMaxNumSteps);
 
-        // Since SUNDIALS 7, CVODE warnings (e.g. "t + h = t") are written to the
-        // SUNContext's SUNLogger, which prints to stdout by default, rather than being
-        // passed to the error handler above, so they bypass the RoadRunner Logger.
-        // Disable them at the source, as was effectively the case before SUNDIALS 7 (#1316).
-        CVodeSetMaxHnilWarns(mCVODE_Memory, -1);
-        CVodeSetNoInactiveRootWarn(mCVODE_Memory);
+        // Since SUNDIALS 7, CVODE warnings (e.g. "t + h = t") are queued on the SUNContext's
+        // SUNLogger instead of being passed to the error handler above. With SUNDIALS >= 7.8
+        // they were routed to the RoadRunner Logger above; otherwise SUNDIALS would print them
+        // to stdout, so disable them at the source (#1316).
+        if (!sundialsLogRouted) {
+            CVodeSetMaxHnilWarns(mCVODE_Memory, -1);
+            CVodeSetNoInactiveRootWarn(mCVODE_Memory);
+        }
 
         double t0 = 0.0;
 

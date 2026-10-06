@@ -3,6 +3,7 @@
 //
 
 #include "ForwardSensitivitySolver.h"
+#include "SundialsLogRouting.h"
 #include "ForwardSensitivitySolver.h"
 #include "LLVMExecutableModel.h"
 #include <nvector/nvector_serial.h>               /* access to serial N_Vector                    */
@@ -201,6 +202,7 @@ namespace rr {
           SUNContext_Free(&mSunContext);
         }
         SUNContext_Create(SUN_COMM_NULL, &mSunContext);
+        const bool sundialsLogRouted = routeSundialsLogToRRLogger(mSunContext);
 
         // still need cvode state std::vector size if we have no vars, but have
         // events, needed so root finder works.
@@ -253,12 +255,14 @@ namespace rr {
         // for some sbml tests.
         CVodeSetMaxNumSteps(cvodeIntegrator->mCVODE_Memory, cvodeIntegrator->mDefaultMaxNumSteps);
 
-        // Since SUNDIALS 7, CVODE warnings (e.g. "t + h = t") are written to the
-        // SUNContext's SUNLogger, which prints to stdout by default, rather than being
-        // passed to the error handler above, so they bypass the RoadRunner Logger.
-        // Disable them at the source, as was effectively the case before SUNDIALS 7 (#1316).
-        CVodeSetMaxHnilWarns(cvodeIntegrator->mCVODE_Memory, -1);
-        CVodeSetNoInactiveRootWarn(cvodeIntegrator->mCVODE_Memory);
+        // Since SUNDIALS 7, CVODE warnings (e.g. "t + h = t") are queued on the SUNContext's
+        // SUNLogger instead of being passed to the error handler above. With SUNDIALS >= 7.8
+        // they were routed to the RoadRunner Logger above; otherwise SUNDIALS would print them
+        // to stdout, so disable them at the source (#1316).
+        if (!sundialsLogRouted) {
+            CVodeSetMaxHnilWarns(cvodeIntegrator->mCVODE_Memory, -1);
+            CVodeSetNoInactiveRootWarn(cvodeIntegrator->mCVODE_Memory);
+        }
 
         double t0 = 0.0;
 
